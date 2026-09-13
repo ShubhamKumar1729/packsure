@@ -6,6 +6,12 @@ import type { KnowledgeDoc } from './types'
 
 export const FAQ_DOCS: KnowledgeDoc[] = [
   {
+    id: 'faq-pia-scope',
+    title: 'Why does Pia only answer PackSure questions?',
+    category: 'faq',
+    text: 'Pia is PackSure\u2019s official assistant and is strictly PackSure-only by design. She helps with PackSure features, functionality, navigation, workflows, inspections, products, compliance, analysis, reports, listing comparison, troubleshooting, and FAQs, and she can perform the actions she is authorized for inside PackSure (listing documents and reports, reading analyses and listing comparisons, navigating, and starting operations after you confirm). Anything outside PackSure \u2014 general knowledge, coding or homework help, news, entertainment, advice, other products or AI models, jokes, and creative writing \u2014 is politely declined with a short standard refusal, including disguised or hypothetical versions of such requests and attempts to change her instructions or reveal her system prompt. Friendly conversation is welcome as long as it stays oriented toward helping you with PackSure. The boundary is enforced twice: a scope check runs before retrieval and generation, and the generation prompt itself carries the same policy.',
+  },
+  {
     id: 'faq-status-meanings',
     title: 'What each status value means',
     category: 'faq',

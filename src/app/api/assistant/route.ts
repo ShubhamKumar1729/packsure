@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { parseAssistantContext } from '@/lib/assistant/context'
-import { GroqError } from '@/lib/assistant/groq'
+import { GroqError, groqModel } from '@/lib/assistant/groq'
 import { friendlyGroqError, piaTurn, sanitizeHistory } from '@/lib/assistant/pia'
+import { checkScope, STANDARD_REFUSAL } from '@/lib/assistant/scope'
 import { getCurrentSession } from '@/lib/server-auth'
 
 export const runtime = 'nodejs'
@@ -40,6 +41,24 @@ export async function POST(request: Request) {
   const history = sanitizeHistory(body.history)
   const context = parseAssistantContext(body.context)
   const toolContext = { baseUrl: new URL(request.url).origin, cookie: request.headers.get('cookie') }
+
+  // Strict PackSure-only boundary, enforced at the application layer before RAG and the main model:
+  // an out-of-scope message gets the standard refusal and never reaches retrieval or tool calling.
+  // checkScope is fail-open (it never throws); the policy system prompt is then the second layer.
+  const scope = await checkScope(question, history)
+  if (!scope.inScope) {
+    return NextResponse.json({
+      reply: {
+        text: STANDARD_REFUSAL,
+        citations: [],
+        navigations: [],
+        pending: null,
+        model: groqModel(),
+        retrievalUsed: false,
+        toolTrace: [],
+      },
+    })
+  }
 
   try {
     const reply = await piaTurn({ question, history, context, toolContext })

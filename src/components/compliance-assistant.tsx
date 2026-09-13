@@ -31,7 +31,7 @@ type ChatMessage = {
 
 type ContextEvent = { context?: AssistantContext }
 
-const PIA_GREETING = 'Hey! 👋 I\'m Pia. How can I help you today?'
+const PIA_GREETING = 'Hey! 👋 I\'m Pia. How can I help you with PackSure today?'
 
 const SUGGESTIONS = [
   'What can I do here?',

@@ -159,6 +159,8 @@ No `Math.random()`, seeded analytics, fake charts, or placeholder business stati
 
 A floating robot assistant ("Pia") sits in the bottom-right corner of every authenticated page, with an **Ask Pia** shortcut in the header. Pia is **Groq LLM + PackSure knowledge (RAG) + predefined PackSure tools**: all generation happens server-side against the Groq API, grounded in the bundled knowledge base, with structured tool calling over the existing PackSure APIs. There is no local or browser model, no model download, no Ollama, and no provider other than Groq.
 
+Pia is **strictly PackSure-only**: the boundary is enforced twice, at the application layer (a fast Groq scope classifier runs before retrieval and generation, returning a standard refusal for anything unrelated to PackSure, including disguised, hypothetical, or prompt-injection attempts) and in the generation prompt itself (which also forbids leaking internal instructions, tool definitions, or credentials). The gate is fail-open: if the classifier call fails, the policy-enforcing main model still answers, so users are never locked out by an outage. Friendly conversation is allowed while it stays oriented toward PackSure; conversation history never expands scope.
+
 Request flow:
 
 1. **User message** reaches `POST /api/assistant` (session-required).
