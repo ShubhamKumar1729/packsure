@@ -21,6 +21,57 @@ button, input { font: inherit; }
 button { cursor: pointer; }
 ::selection { background: #dfeee4; color: #163e2f; }
 
+/* Compliance AI robot. Kept in CSS rather than a library so the assistant ships with no extra
+   dependency and no network-fetched assets. */
+@keyframes ps-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2.5px); }
+}
+@keyframes ps-blink {
+  0%, 88%, 100% { transform: scaleY(1); }
+  93% { transform: scaleY(0.08); }
+}
+@keyframes ps-think {
+  0%, 100% { transform: translate(0, 0); }
+  35% { transform: translate(-1.1px, -1.6px); }
+  70% { transform: translate(1.1px, -1.6px); }
+}
+@keyframes ps-talk {
+  0%, 100% { transform: scaleY(0.55); }
+  50% { transform: scaleY(1.7); }
+}
+@keyframes ps-glow {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes ps-ring {
+  0% { transform: scale(0.85); opacity: 0.5; }
+  70% { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+@keyframes ps-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+.ps-robot { animation: ps-bob 3.6s ease-in-out infinite; }
+.ps-robot--thinking { animation-duration: 2.2s; }
+.ps-robot--offline { animation: none; filter: grayscale(0.55); opacity: 0.8; }
+.ps-eyes { transform-box: fill-box; transform-origin: center; animation: ps-blink 5s ease-in-out infinite; }
+.ps-robot--thinking .ps-eyes { animation: ps-think 2.4s ease-in-out infinite; }
+.ps-robot--offline .ps-eyes { animation: none; }
+.ps-mouth { transform-box: fill-box; transform-origin: center; }
+.ps-robot--speaking .ps-mouth { animation: ps-talk 0.42s ease-in-out infinite; }
+.ps-antenna { transform-box: fill-box; transform-origin: center; animation: ps-glow 2.4s ease-in-out infinite; }
+.ps-robot--thinking .ps-antenna { animation-duration: 0.9s; }
+.ps-robot--offline .ps-antenna { animation: none; opacity: 0.35; }
+.ps-ring { animation: ps-ring 2.6s cubic-bezier(0.22, 0.61, 0.36, 1) infinite; }
+.ps-dot { animation: ps-dot 1.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-robot, .ps-eyes, .ps-mouth, .ps-antenna, .ps-ring, .ps-dot { animation: none !important; }
+}
+
 @layer components {
   .eyebrow {
     @apply inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.17em] text-moss;

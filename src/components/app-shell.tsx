@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   ShieldCheck,
+  Sparkles,
   X,
 } from 'lucide-react'
 import { Brand } from '@/components/brand'
@@ -47,13 +48,17 @@ function roleLabel(role: UserRole) {
   return role.charAt(0).toUpperCase() + role.slice(1)
 }
 
-function assistantContext(pathname: string): AssistantContext | null {
+/**
+ * Always resolves to a context: the assistant answers general platform questions even when no
+ * record is open, so there is never a "nothing to talk about" state.
+ */
+function assistantContext(pathname: string): AssistantContext {
   const parts = pathname.split('/').filter(Boolean)
-  if (parts[0] !== 'app') return null
+  if (parts[0] !== 'app') return { type: 'workspace' }
   if (parts[1] === 'inspections' && parts[2] && parts[2] !== 'review') return { type: 'inspection', id: parts[2] }
   if (parts[1] === 'products' && parts[2]) return { type: 'product', id: parts[2] }
   if (parts[1] === 'reports' && parts[2]) return { type: 'report', id: parts[2] }
-  return null
+  return { type: 'workspace' }
 }
 
 export function AppShell({ session, children }: { session: SessionPayload; children: React.ReactNode }) {
@@ -72,6 +77,7 @@ export function AppShell({ session, children }: { session: SessionPayload; child
   const visibleNavigation = navigation.filter((item) => canAccess(session.role, item.roles))
   const title = pageTitles[pathname] ?? 'Workspace'
   const currentAssistantContext = assistantContext(pathname)
+  const openAssistant = () => window.dispatchEvent(new CustomEvent('packsure-assistant-open'))
 
   const sidebar = (
     <aside className="flex h-full w-[250px] shrink-0 flex-col border-r border-line bg-[#f4f2ec] px-4 py-5">
@@ -149,6 +155,15 @@ export function AppShell({ session, children }: { session: SessionPayload; child
               <span className="h-1.5 w-1.5 rounded-full bg-moss" />
               No live data connected
             </div>
+            <button
+              type="button"
+              onClick={openAssistant}
+              className="focus-ring inline-flex items-center gap-2 rounded-xl border border-moss/20 bg-leaf px-3 py-2 text-xs font-semibold text-moss transition hover:bg-white"
+              title="Ask Compliance AI about this platform"
+            >
+              <Sparkles size={15} />
+              <span className="hidden sm:inline">Ask Compliance AI</span>
+            </button>
             <button type="button" onClick={handleLogout} disabled={loggingOut} className="focus-ring inline-flex items-center gap-2 rounded-xl px-2 py-2 text-xs font-semibold text-muted transition hover:bg-paper hover:text-ink disabled:opacity-60" title="Sign out">
               <LogOut size={16} />
               <span className="hidden md:inline">{loggingOut ? 'Signing out…' : 'Sign out'}</span>

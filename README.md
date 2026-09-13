@@ -157,34 +157,51 @@ No `Math.random()`, seeded analytics, fake charts, or placeholder business stati
 
 ### Compliance AI assistant
 
-A floating **Compliance AI** assistant is available inside authenticated record pages.
+A floating robot assistant is available on every authenticated page, and the header has an **Ask Compliance AI** shortcut. It is a real multi-turn conversation rather than a keyword lookup: previous turns are replayed to the model on each request, so follow-ups such as "and who can publish that?" or "show me the evidence" work the way they do in any mainstream chat app. Enter sends, Shift + Enter adds a new line, and the conversation can be cleared at any time.
 
-It is context-aware for:
+It knows the whole platform: the capture workflow, every status and what produces it, roles and permissions, rule kinds and versioning, finding review and the audit log, final-decision conditions, report generation, listing and MRP comparison, dashboard risk scoring, camera and evidence handling, and the limits of the AI provider layer. That knowledge lives in `src/lib/assistant/platform-knowledge.ts` and is sent as the system prompt.
 
-- Inspections
-- Individual findings
-- Products and product history
-- Reports
-
-Example questions:
+It is also record-aware. On a record page it reads that record through the authorized backend tools in `src/lib/assistant/tools.ts` — inspections, findings, product history, evidence, rules, and reports — and answers questions about it:
 
 - Why did this inspection fail?
-- Explain this violation.
-- Show the evidence.
+- Which rule caused this result?
 - Which finding is more serious?
 - What happened in the previous inspection?
-- Which rule caused this result?
+- Show me the evidence.
+- What does `REVIEW_REQUIRED` mean?
+- Who can publish a final decision?
+- How is the dashboard risk score calculated?
 
-All assistant data access goes through authorized backend tools in `src/lib/assistant/tools.ts` for:
+On a page with no record open it answers general platform questions from the knowledge base.
 
-- Inspections
-- Findings
-- Product history
-- Evidence
-- Rules
-- Reports
+Guarantees that hold for every provider:
 
-The assistant provider never receives MongoDB access. The current `MockAssistantProvider` only summarizes returned records and clearly reports missing information. Responses are marked **AI Assessment** and explicitly do not change human review, final decisions, or audit history.
+- The provider never receives a database handle, a Mongoose model, or a connection string. Records are fetched server-side first and passed in as text.
+- Citations and evidence links are derived server-side from the authorized records by `buildReferences` in `src/lib/assistant/prompt.ts`, never emitted by the model, so a hallucinated ID or link cannot reach the UI.
+- Access is scoped exactly like the rest of the app: a user sees only records they created unless they are an admin or reviewer.
+- Every answer is labelled **AI assessment** and states its boundary. The assistant cannot change a compliance result, a human review decision, a final decision, or an audit entry.
+
+#### Choosing a model
+
+Provider selection is server-side and env-driven, in `src/lib/assistant/provider.ts`. With nothing configured, `ASSISTANT_PROVIDER=auto` finds no credentials and PackSure answers from its built-in offline responder: a curated knowledge base plus your authorized records. Those replies are labelled `offline responder` in the chat and carry a notice, so they are never mistaken for a live model.
+
+Add any one credential to `.env.local` to switch the same assistant to real conversational answers:
+
+| `ASSISTANT_PROVIDER` | Credential | Default model |
+| --- | --- | --- |
+| `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` |
+| `anthropic` | `ANTHROPIC_API_KEY` | `claude-sonnet-4-5` |
+| `gemini` | `GEMINI_API_KEY` | `gemini-2.5-flash` |
+| `groq` | `GROQ_API_KEY` | `llama-3.3-70b-versatile` |
+| `openrouter` | `OPENROUTER_API_KEY` | `openai/gpt-4o-mini` |
+| `ollama` (explicit only) | none needed | `llama3.2` |
+| `mock` | none | built-in offline responder |
+
+`auto` picks the first provider above that has a credential. `ollama` is never auto-selected because a local model server needs no key, so it must be requested by name. `ASSISTANT_MODEL` overrides the default model for whichever provider is active, and every provider also accepts a `*_BASE_URL` override.
+
+Any other OpenAI-compatible gateway works without code changes by setting `ASSISTANT_API_KEY` together with `ASSISTANT_BASE_URL`; that pair takes precedence over the named presets. The provider calls `POST {base}/chat/completions` and automatically retries with `max_completion_tokens` when an endpoint rejects the legacy `max_tokens` field.
+
+If the configured model is unreachable, rate-limited, or rejects the key, the request does not fail: PackSure answers from the offline responder and states exactly why the model was not used. Model calls happen only inside the API route, so no key ever reaches the browser.
 
 ## Important routes
 
@@ -269,6 +286,16 @@ MONGODB_URI=mongodb://127.0.0.1:27017/packsure
 AI_PROVIDER=mock
 NODE_ENV=development
 ```
+
+The Compliance AI assistant needs no configuration to work — it falls back to the built-in offline
+responder. To give it real conversational answers, add one provider credential, for example:
+
+```env
+ASSISTANT_PROVIDER=auto
+OPENAI_API_KEY=sk-your-key
+```
+
+See `.env.example` for every supported provider, model override, and base-URL override.
 
 Generate a local secret on macOS/Linux with:
 
@@ -402,6 +429,10 @@ Leaving the capture step intentionally releases the device, and the panel return
 
 This is expected with `AI_PROVIDER=mock`. The mock provider processes real image bytes but does not invent OCR or business values.
 
+### Compliance AI answers from the "offline responder"
+
+No model credential is configured, or the configured model failed. The reply is still real — it comes from the curated platform knowledge base and your authorized records — and the chat shows a notice naming the cause. Add a credential from the table in [Choosing a model](#choosing-a-model) and restart the dev server, because environment changes are only read at startup.
+
 ### Compliance is `NOT_APPLICABLE`
 
 No enabled rules were available, or all configured rules were not applicable. An administrator must add verified rule definitions and enable them before meaningful compliance statuses can be produced.
@@ -414,5 +445,3 @@ No enabled rules were available, or all configured rules were not applicable. An
 - Keep MongoDB access inside backend routes and authorized backend tools.
 - Use real stored evidence for inspections and reports.
 - Review role permissions before deploying outside local development.
-#   p a c k s u r e  
- 

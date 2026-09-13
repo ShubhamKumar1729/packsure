@@ -5,6 +5,7 @@ export type AssistantContext =
   | { type: 'finding'; id: string; inspectionId: string }
   | { type: 'product'; id: string }
   | { type: 'report'; id: string }
+  | { type: 'workspace' }
 
 export type AssistantEvidence = {
   id: string
@@ -116,19 +117,38 @@ export type AssistantCitation = {
   href?: string
 }
 
+/**
+ * 'model' means a configured language model produced the answer. 'offline' means the deterministic
+ * built-in responder answered because no model is configured or the configured model was
+ * unreachable. The distinction is always surfaced so an answer is never mistaken for a live model.
+ */
+export type AssistantMode = 'model' | 'offline'
+
+export type AssistantRole = 'user' | 'assistant'
+
+export type AssistantMessage = {
+  role: AssistantRole
+  content: string
+}
+
 export type AssistantAnswer = {
   provider: string
   providerVersion: string
+  model?: string
   assessmentType: 'AI_ASSESSMENT'
+  mode: AssistantMode
   text: string
   citations: AssistantCitation[]
   evidence: AssistantEvidence[]
   boundary: string
+  /** Set when the answer did not come from the configured model, explaining why. */
+  notice?: string
 }
 
 export type AssistantRequest = {
   question: string
   context: AssistantContext
+  history: AssistantMessage[]
 }
 
 export type AssistantSession = {
@@ -140,6 +160,7 @@ export type AssistantProviderInput = {
   question: string
   context: AssistantContext
   tools: AssistantToolContext
+  history: AssistantMessage[]
 }
 
 export interface AssistantProvider {

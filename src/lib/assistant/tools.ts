@@ -241,6 +241,12 @@ export async function getReports(session: AssistantSession, args: { inspectionId
 }
 
 export async function collectAssistantContext(session: AssistantSession, context: AssistantContext): Promise<AssistantToolContext> {
+  // A general conversation about the platform needs no records at all, and must not touch the
+  // database — otherwise the assistant would be unusable whenever MongoDB is unreachable.
+  if (context.type === 'workspace') {
+    return { inspection: null, findings: [], productHistory: null, evidence: [], rules: [], reports: [], context }
+  }
+
   await connectToDatabase()
   let inspection: AssistantInspection | null = null
   let findings: AssistantFinding[] = []
