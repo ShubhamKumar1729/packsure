@@ -31,8 +31,10 @@ type ChatMessage = {
 
 type ContextEvent = { context?: AssistantContext }
 
+const PIA_GREETING = 'Hey! 👋 I\'m Pia. How can I help you today?'
+
 const SUGGESTIONS = [
-  'Hi Pia! What can you do?',
+  'What can I do here?',
   'How does the inspection workflow work?',
   'What does REVIEW_REQUIRED mean?',
   'Who can publish a final decision?',
@@ -136,22 +138,32 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
     setContext(baseContext ?? WORKSPACE_CONTEXT)
   }
 
+  // Opening Pia (or clearing the chat) starts with a friendly greeting. Seeded from user events
+  // (click / clear), never from an effect, so there is no cascading render.
+  const seedGreeting = useCallback(() => {
+    setMessages((current) => (current.length === 0 ? [{ id: newId(), role: 'assistant', content: PIA_GREETING }] : current))
+  }, [])
+
   useEffect(() => {
     const onContext = (event: Event) => {
       const detail = (event as CustomEvent<ContextEvent>).detail
       if (detail?.context) {
         setContext(detail.context)
         setOpen(true)
+        seedGreeting()
       }
     }
-    const onOpen = () => setOpen(true)
+    const onOpen = () => {
+      setOpen(true)
+      seedGreeting()
+    }
     window.addEventListener('packsure-assistant-context', onContext)
     window.addEventListener('packsure-assistant-open', onOpen)
     return () => {
       window.removeEventListener('packsure-assistant-context', onContext)
       window.removeEventListener('packsure-assistant-open', onOpen)
     }
-  }, [])
+  }, [seedGreeting])
 
   useEffect(() => {
     const node = scrollRef.current
@@ -161,6 +173,7 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
   useEffect(() => {
     if (open) window.setTimeout(() => inputRef.current?.focus(), 60)
   }, [open])
+
 
   const suggestions = useMemo(() => (context.type === 'workspace' ? SUGGESTIONS : ['Why did this inspection fail?', 'What did the AI analysis find here?', 'Run compliance checks on this inspection', ...SUGGESTIONS.slice(1, 4)]), [context.type])
 
@@ -223,7 +236,7 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
   }, [context])
 
   const clearConversation = () => {
-    setMessages([])
+    setMessages([{ id: newId(), role: 'assistant', content: PIA_GREETING }])
     setQuestion('')
   }
 
@@ -250,27 +263,17 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
           </header>
 
           <div ref={scrollRef} className="max-h-[min(560px,62vh)] min-h-[240px] space-y-4 overflow-y-auto p-4">
-            {messages.length === 0 ? (
-              <div>
-                <div className="flex items-start gap-3 rounded-2xl border border-line bg-canvas p-4">
-                  <RobotAvatar state="idle" size={34} />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-ink">Hi, I&apos;m Pia — your PackSure assistant.</p>
-                    <p className="mt-1.5 text-[11px] leading-5 text-muted">
-                      Ask me anything about this platform, or just chat. I answer from PackSure&apos;s own knowledge base,
-                      can look up your documents, reports, and analyses, take you to any page, and start existing operations once you confirm.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {suggestions.map((item) => (
-                    <button key={item} type="button" onClick={() => void ask(item)} className="focus-ring rounded-full border border-line bg-paper px-2.5 py-1.5 text-left text-[10px] font-semibold text-moss transition hover:border-moss/30 hover:bg-leaf">{item}</button>
-                  ))}
-                </div>
-              </div>
-            ) : messages.map((message) => message.role === 'user'
+            {messages.map((message) => message.role === 'user'
               ? <div key={message.id} className="flex justify-end"><div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#dfeee4] px-3 py-2.5 text-[11.5px] leading-5 font-medium text-[#1b3d2e]">{message.content}</div></div>
               : <AssistantBubble key={message.id} message={message} busy={loading} onResolve={resolveConfirmation} />)}
+
+            {messages.length <= 1 && !loading ? (
+              <div className="flex flex-wrap gap-2">
+                {suggestions.map((item) => (
+                  <button key={item} type="button" onClick={() => void ask(item)} className="focus-ring rounded-full border border-line bg-paper px-2.5 py-1.5 text-left text-[10px] font-semibold text-moss transition hover:border-moss/30 hover:bg-leaf">{item}</button>
+                ))}
+              </div>
+            ) : null}
 
             {loading ? (
               <div className="flex items-start gap-2">
@@ -308,7 +311,11 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
 
       <button
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          const next = !open
+          setOpen(next)
+          if (next) seedGreeting()
+        }}
         className="focus-ring group relative ml-auto grid h-[60px] w-[60px] place-items-center rounded-full border border-white/15 bg-[#244936] shadow-[0_10px_30px_rgba(32,37,33,0.32)] transition hover:-translate-y-0.5 hover:bg-[#174a37]"
         aria-label={open ? 'Close Pia' : 'Open Pia'}
         aria-expanded={open}

@@ -40,8 +40,8 @@ function baseUrl() {
 }
 
 /** Groq retired llama-3.3-70b-versatile in August 2026; gpt-oss-120b is the recommended successor. */
-export const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-120b'
-export const DEFAULT_GROQ_RETRIEVAL_MODEL = 'openai/gpt-oss-20b'
+const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-120b'
+const DEFAULT_GROQ_RETRIEVAL_MODEL = 'openai/gpt-oss-20b'
 
 export function groqModel() {
   return process.env.GROQ_MODEL?.trim() || DEFAULT_GROQ_MODEL
@@ -51,7 +51,7 @@ export function groqRetrievalModel() {
   return process.env.GROQ_RETRIEVAL_MODEL?.trim() || DEFAULT_GROQ_RETRIEVAL_MODEL
 }
 
-export function groqKey(): string | null {
+function groqKey(): string | null {
   const key = process.env.GROQ_API_KEY?.trim()
   return key ? key : null
 }

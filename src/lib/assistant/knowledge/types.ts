@@ -12,12 +12,3 @@ export type KnowledgeDoc = {
   category: KnowledgeCategory
   text: string
 }
-
-export const KNOWLEDGE_CATEGORIES: { id: KnowledgeCategory; label: string }[] = [
-  { id: 'overview', label: 'platform overview and roles' },
-  { id: 'feature', label: 'feature explanations' },
-  { id: 'faq', label: 'frequently asked questions' },
-  { id: 'navigation', label: 'navigation instructions' },
-  { id: 'workflow', label: 'user workflows and operations' },
-  { id: 'troubleshooting', label: 'troubleshooting and help' },
-]
