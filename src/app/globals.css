@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Inter', 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: #f7f5f0;
+  color: #202521;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+::selection { background: #dfeee4; color: #163e2f; }
+
+@layer components {
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.17em] text-moss;
+  }
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-moss focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+  }
+  .surface {
+    @apply rounded-2xl border border-line bg-paper shadow-soft;
+  }
+  .muted-copy {
+    @apply text-sm leading-6 text-muted;
+  }
+}
