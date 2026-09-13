@@ -36,7 +36,6 @@ const PIA_GREETING = 'Hey! 👋 I\'m Pia. How can I help you today?'
 const SUGGESTIONS = [
   'What can I do here?',
   'How does the inspection workflow work?',
-  'What does REVIEW_REQUIRED mean?',
   'Who can publish a final decision?',
   'Show me my inspections',
   'Take me to the reports',
@@ -262,7 +261,7 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
             </div>
           </header>
 
-          <div ref={scrollRef} className="max-h-[min(420px,46vh)] min-h-[180px] space-y-3 overflow-y-auto p-3">
+          <div ref={scrollRef} className="max-h-[min(378px,41vh)] min-h-[162px] space-y-3 overflow-y-auto p-3">
             {messages.map((message) => message.role === 'user'
               ? <div key={message.id} className="flex justify-end"><div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#dfeee4] px-2.5 py-2 text-[11px] leading-[1.45] font-medium text-[#1b3d2e]">{message.content}</div></div>
               : <AssistantBubble key={message.id} message={message} busy={loading} onResolve={resolveConfirmation} />)}
