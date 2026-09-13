@@ -1,7 +1,7 @@
 /**
  * The assistant's local platform knowledge base.
  *
- * These documents are the retrieval corpus for the Compliance AI assistant. They are bundled with
+ * These documents are the retrieval corpus for the Pia, the PackSure AI assistant. They are bundled with
  * the app (no network fetch, no database) and embedded on-device the first time the assistant is
  * opened, so answers are grounded in real documentation instead of hardcoded if/else responses.
  *
@@ -111,9 +111,9 @@ export const KNOWLEDGE: KnowledgeDoc[] = [
   },
   {
     id: 'feature-assistant',
-    title: 'The Compliance AI assistant itself',
+    title: 'Pia, the PackSure AI assistant',
     category: 'feature',
-    text: 'The Compliance AI assistant is the floating robot in the bottom-right corner of every authenticated page, also reachable from the Ask Compliance AI button in the header. It runs a small open-source language model entirely on your own device through WebGPU or WebAssembly, with no API key, no external AI service, and no separate application to install. It answers from this local knowledge base using retrieval, can read your authorized records through the same APIs the app uses, can navigate you to any section, and can offer to start operations that already exist, always with your confirmation. It keeps the conversation history so follow-up questions work. Its answers are advisory: it never changes a compliance result, a human review decision, a final decision, or the audit log.',
+    text: 'Pia is the floating robot assistant in the bottom-right corner of every authenticated page, also reachable from the Ask Pia button in the header. All of Pia\'s reasoning runs server-side on the Groq API (model configurable via GROQ_MODEL, default openai/gpt-oss-120b); the GROQ_API_KEY secret stays on the server and never reaches browsers. Pia answers from this local PackSure knowledge base using retrieval (BM25 candidates plus a semantic selection pass), keeps the conversation history so follow-up questions work, and can call structured tools: navigate to a section, list your documents or reports, read an inspection\'s analysis or listing comparison, and propose existing operations (analysis, compliance run, listing comparison, report generation) which only execute after you confirm in a confirmation card. Pia is advisory: she never changes a compliance result, a human review decision, a final decision, or the audit log, and review and final-decision actions remain human-only.',
   },
   {
     id: 'navigation-sections',
@@ -165,9 +165,9 @@ export const KNOWLEDGE: KnowledgeDoc[] = [
   },
   {
     id: 'faq-assistant-privacy',
-    title: 'Where does the assistant run and what does it see?',
+    title: 'Where Pia runs and what she can see',
     category: 'faq',
-    text: 'The assistant model runs locally in your browser on your own device; no question, record, or answer ever leaves the application except the normal authenticated API calls the app itself makes to read your records. The model and its index are downloaded once from the open model repository and cached in your browser, so later visits start instantly and work without re-downloading. The assistant only reads records your role is allowed to see, and it can only offer to trigger operations that already exist in the app, with your explicit confirmation.',
+    text: 'Pia reasons server-side through the Groq API: your question, the relevant PackSure documentation, and the conversation history are sent to Groq from the PackSure server, and the Groq API key never leaves the server. Record lookups happen through the same authenticated PackSure APIs your own session uses, so Pia only ever sees records your role allows, and operations she proposes run only after you confirm them. Nothing is downloaded to your browser and no model runs on your device.',
   },
   {
     id: 'troubleshooting-login',
@@ -183,9 +183,9 @@ export const KNOWLEDGE: KnowledgeDoc[] = [
   },
   {
     id: 'troubleshooting-assistant-model',
-    title: 'The assistant cannot download its model',
+    title: 'Pia says she is not configured or Groq failed',
     category: 'troubleshooting',
-    text: 'On first use the assistant downloads its small open-source model and embedding index from the open Hugging Face repository and caches them in the browser. If that download is blocked by a corporate proxy or an offline network, the assistant says so plainly and still offers retrieval-based document answers where possible. Connecting to a network that can reach huggingface.co once is enough; after that the cached model works offline.',
+    text: 'Pia needs the server-side GROQ_API_KEY environment variable. If she reports that she is not configured, add GROQ_API_KEY to .env.local and restart the server, because environment variables are read only at startup. If she reports a rate limit or that Groq is unavailable, wait a few seconds and ask again; those conditions are temporary. The key is never sent to browsers, so a browser-side network problem is never the cause of a Pia failure.',
   },
   {
     id: 'troubleshooting-not-applicable',
