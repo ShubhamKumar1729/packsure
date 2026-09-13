@@ -155,35 +155,31 @@ The risk indicator uses deterministic factors from real records:
 
 No `Math.random()`, seeded analytics, fake charts, or placeholder business statistics are used. An empty database shows professional empty states. If MongoDB is unavailable, the dashboard shows a live-data connection state instead of making up values.
 
-### Compliance AI assistant
+### Pia — the PackSure AI assistant
 
-A floating robot assistant sits in the bottom-right corner of every authenticated page, with an **Ask Compliance AI** shortcut in the header. It is a genuine conversational assistant: a small open-source language model runs **entirely on your own device** in the browser (WebGPU, with a WebAssembly fallback), so it needs no API key, no external AI service, no Ollama, and nothing to install. Conversation history is kept in the chat, so follow-up questions work naturally.
+A floating robot assistant ("Pia") sits in the bottom-right corner of every authenticated page, with an **Ask Pia** shortcut in the header. Pia is **Groq LLM + PackSure knowledge (RAG) + predefined PackSure tools**: all generation happens server-side against the Groq API, grounded in the bundled knowledge base, with structured tool calling over the existing PackSure APIs. There is no local or browser model, no model download, no Ollama, and no provider other than Groq.
 
-#### How it answers
+Request flow:
 
-1. **Retrieval (RAG).** The platform knowledge base in `src/lib/assistant/knowledge.ts` — overview, roles, features, FAQs, navigation instructions, workflows, and troubleshooting — is embedded on-device with `all-MiniLM-L6-v2` (q8, ~23 MB) and searched by cosine similarity for every question. The matched documents are quoted into the prompt, so answers are grounded in real documentation instead of hardcoded branches.
-2. **On-device generation.** `SmolLM2-135M-Instruct` (135M parameters, q4 ONNX, ~70 MB) renders the prompt with its own chat template and generates the reply locally. Persona, grounding rules, and the tool specification live in `src/lib/assistant/agent-protocol.ts`.
-3. **Platform tools.** The model — not keyword matching — decides when a tool is appropriate by emitting a `TOOL {...}` line. Tools in `src/lib/assistant/agent-tools.ts` map only onto things that already exist: `navigate_to` and `open_record` use the client router; `list_documents`, `list_reports`, `get_analysis`, and `get_listing_comparison` call the same authenticated GET endpoints the app uses; `start_operation` can offer `analyze`, `run_compliance`, `listing_comparison`, or `generate_report`, and the chat shows a **Confirm and run** control that posts to the existing endpoint only after explicit approval. Review decisions and final decisions are never exposed as tools.
-4. **Grounded reply.** The tool result is fed back to the model, which writes the natural-language answer. Retrieved document titles are shown as citations under each reply.
+1. **User message** reaches `POST /api/assistant` (session-required).
+2. **Retrieval**: `src/lib/assistant/retrieval.ts` scores the knowledge corpus in `src/lib/assistant/knowledge.ts` (overview, roles, features, FAQs, navigation, workflows, inspection/compliance/report/listing behaviour, troubleshooting) with BM25, then Groq semantically selects the documents that match the question's meaning. Matched titles are shown as **Knowledge sources** under each reply.
+3. **Groq** (`src/lib/assistant/groq.ts`, server-side only) receives the persona + grounding rules + retrieved documents + conversation history and decides whether to answer directly or call a tool. There is no keyword matching and no if/else intent classification.
+4. **Tools** (`src/lib/assistant/tools-server.ts`) are declared as native Groq function tools: `navigate_to`, `list_documents`, `list_reports`, `get_analysis`, `get_listing_comparison`, and `start_operation`. Every executor dispatches to the *existing* authenticated PackSure API routes via an internal loopback call that forwards the caller's session cookie — Pia adds no duplicate backend logic.
+5. **Confirmation**: `start_operation` (analyze, compliance run, listing comparison, report generation) never executes immediately. Pia returns a confirmation card; only after the user clicks **Confirm** does `POST /api/assistant/confirm` verify a signed, time-limited token (operation + inspection id bound with `AUTH_SECRET`), call the existing endpoint, and send the outcome back to Groq for a natural-language explanation. **Cancel** tells Groq nothing ran.
+6. **Final response** streams back to the chat UI with citations, navigation chips, and the confirmation state.
 
-Both models download once from the open Hugging Face repository on first use (about 95 MB in total: ~70 MB of q4 weights, ~23 MB of embedding weights, ~4 MB of tokenizer) and are cached in the browser, so later visits start instantly and keep working offline. The chat shows live download progress, the active execution device, and per-reply timing. If a network blocks the first download, the assistant says so plainly instead of pretending.
+Conversation memory: the client replays recent turns with every request, so follow-ups like "can you run it on my latest document?" resolve from context.
 
-Example questions it handles conversationally:
+Configuration (server-side only):
 
-- Hello! What can you do?
-- How does the inspection workflow work?
-- What does `REVIEW_REQUIRED` mean, and why is my score null?
-- Who can publish a final decision?
-- Show me my inspections / take me to the reports.
-- What did the AI analysis find on this inspection?
-- Start a compliance run on this inspection (asks for confirmation first).
+```env
+GROQ_API_KEY=your-key
+GROQ_MODEL=openai/gpt-oss-120b   # optional override; default is Groq's recommended flagship
+```
 
-Guarantees:
+`GROQ_API_KEY` is read exclusively by the API route from `process.env`. It is never placed in `NEXT_PUBLIC_*`, never bundled into client JavaScript, never returned in responses, and never logged. Optional extras: `GROQ_BASE_URL` (self-hosted Groq-compatible gateway) and `GROQ_RETRIEVAL_MODEL` (default `openai/gpt-oss-20b` for the retrieval selector).
 
-- No question, record, or answer ever leaves the application except the normal authenticated API calls the app itself makes.
-- The assistant is advisory: it never changes a compliance result, a human review decision, a final decision, or an audit entry, and every reply says so.
-- If the documentation does not cover a capability, the assistant states that PackSure does not implement it rather than inventing a feature.
-- Record access goes through the existing session-scoped endpoints, so a user only ever sees records their role allows.
+Error handling: missing key, rejected key, rate limit, timeout, upstream outage, network failure, malformed model output, invalid tool calls, and unavailable PackSure APIs each produce a specific, user-friendly message in the chat instead of a crash. If retrieval finds nothing, Pia says the capability is not documented rather than inventing it.
 
 ## Important routes
 
@@ -269,8 +265,8 @@ AI_PROVIDER=mock
 NODE_ENV=development
 ```
 
-The Compliance AI assistant needs no environment variables at all: its models run on-device and are
-fetched once from the open Hugging Face repository on first use.
+Pia, the AI assistant, needs one server-side variable: `GROQ_API_KEY` (plus optional `GROQ_MODEL`).
+It is read only by the assistant API route and never exposed to browsers.
 
 Generate a local secret on macOS/Linux with:
 
@@ -404,9 +400,9 @@ Leaving the capture step intentionally releases the device, and the panel return
 
 This is expected with `AI_PROVIDER=mock`. The mock provider processes real image bytes but does not invent OCR or business values.
 
-### The assistant cannot download its on-device model
+### Pia says she is not configured
 
-On first use the assistant downloads its two small open-source models from the open Hugging Face repository and caches them in the browser. A corporate proxy or a fully offline machine can block that first download; the assistant then says so plainly in the chat. Connect once from a network that can reach `huggingface.co` and the cached models keep working offline afterwards.
+The server is missing `GROQ_API_KEY`. Add it to `.env.local` and restart the dev server (environment variables are read only at startup). The key stays server-side; browsers never see it.
 
 ### Compliance is `NOT_APPLICABLE`
 

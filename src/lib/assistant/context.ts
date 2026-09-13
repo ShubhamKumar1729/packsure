@@ -37,3 +37,14 @@ export function contextLabel(context: AssistantContext): string {
     default: return 'General · whole platform'
   }
 }
+
+/** Server-side validation of the client-supplied context hint. */
+export function parseAssistantContext(value: unknown): AssistantContext {
+  if (!value || typeof value !== 'object') return { type: 'workspace' }
+  const context = value as Record<string, unknown>
+  if (context.type === 'inspection' && typeof context.id === 'string') return { type: 'inspection', id: context.id }
+  if (context.type === 'product' && typeof context.id === 'string') return { type: 'product', id: context.id }
+  if (context.type === 'report' && typeof context.id === 'string') return { type: 'report', id: context.id }
+  if (context.type === 'finding' && typeof context.id === 'string' && typeof context.inspectionId === 'string') return { type: 'finding', id: context.id, inspectionId: context.inspectionId }
+  return { type: 'workspace' }
+}

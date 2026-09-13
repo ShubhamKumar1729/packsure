@@ -10,7 +10,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.2.0",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^2.4.3",
     "jose": "^6.1.0",

@@ -159,10 +159,10 @@ export function AppShell({ session, children }: { session: SessionPayload; child
               type="button"
               onClick={openAssistant}
               className="focus-ring inline-flex items-center gap-2 rounded-xl border border-moss/20 bg-leaf px-3 py-2 text-xs font-semibold text-moss transition hover:bg-white"
-              title="Ask Compliance AI about this platform"
+              title="Ask Pia, the PackSure assistant"
             >
               <Sparkles size={15} />
-              <span className="hidden sm:inline">Ask Compliance AI</span>
+              <span className="hidden sm:inline">Ask Pia</span>
             </button>
             <button type="button" onClick={handleLogout} disabled={loggingOut} className="focus-ring inline-flex items-center gap-2 rounded-xl px-2 py-2 text-xs font-semibold text-muted transition hover:bg-paper hover:text-ink disabled:opacity-60" title="Sign out">
               <LogOut size={16} />
