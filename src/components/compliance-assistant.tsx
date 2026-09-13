@@ -63,18 +63,18 @@ function ConfirmationCard({ message, busy, onResolve }: { message: ChatMessage; 
   if (!pending) return null
   if (message.pendingResult) {
     return (
-      <div className={`mt-2 rounded-lg border px-2.5 py-2 text-[10px] font-semibold ${message.pendingResult.ok ? 'border-moss/25 bg-leaf text-moss' : 'border-line bg-canvas text-muted'}`}>
+      <div className={`mt-2 rounded-lg border px-2 py-1.5 text-[9.5px] font-semibold ${message.pendingResult.ok ? 'border-moss/25 bg-leaf text-moss' : 'border-line bg-canvas text-muted'}`}>
         {message.pendingResult.message}
       </div>
     )
   }
   return (
-    <div className="mt-2.5 rounded-lg border border-amber/40 bg-amber-soft p-2.5">
-      <p className="text-[10px] font-semibold text-[#8a5a20]">{pending.label}</p>
-      <p className="mt-1 text-[9px] leading-4 text-[#8a5a20]/80">Inspection …{pending.inspectionId.slice(-6)} · runs the same endpoint as the button in the app UI. Nothing happens until you confirm.</p>
+    <div className="mt-2 rounded-lg border border-amber/40 bg-amber-soft p-2">
+      <p className="text-[9.5px] font-semibold text-[#8a5a20]">{pending.label}</p>
+      <p className="mt-0.5 text-[9px] leading-4 text-[#8a5a20]/80">Inspection …{pending.inspectionId.slice(-6)} · runs the same endpoint as the button in the app UI. Nothing happens until you confirm.</p>
       <div className="mt-2 flex gap-2">
-        <button type="button" disabled={busy} onClick={() => onResolve(message, true)} className="focus-ring rounded-lg bg-moss px-2.5 py-1.5 text-[10px] font-semibold text-white disabled:opacity-60">Confirm</button>
-        <button type="button" disabled={busy} onClick={() => onResolve(message, false)} className="focus-ring rounded-lg border border-line bg-paper px-2.5 py-1.5 text-[10px] font-semibold text-muted disabled:opacity-60">Cancel</button>
+        <button type="button" disabled={busy} onClick={() => onResolve(message, true)} className="focus-ring rounded-lg bg-moss px-2 py-1 text-[9.5px] font-semibold text-white disabled:opacity-60">Confirm</button>
+        <button type="button" disabled={busy} onClick={() => onResolve(message, false)} className="focus-ring rounded-lg border border-line bg-paper px-2 py-1 text-[9.5px] font-semibold text-muted disabled:opacity-60">Cancel</button>
       </div>
     </div>
   )
@@ -84,36 +84,36 @@ function AssistantBubble({ message, busy, onResolve }: { message: ChatMessage; b
   const reply = message.reply
   return (
     <div className="flex items-start gap-2">
-      <span className="mt-0.5 shrink-0"><RobotAvatar size={26} label="Pia" /></span>
-      <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm border border-line bg-canvas p-3">
+      <span className="mt-0.5 shrink-0"><RobotAvatar size={20} label="Pia" /></span>
+      <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm border border-line bg-canvas p-2.5">
         {message.error ? (
-          <div className="flex items-start gap-2 text-[11px] leading-5 text-danger"><ShieldAlert size={14} className="mt-0.5 shrink-0" />{message.error}</div>
+          <div className="flex items-start gap-2 text-[10.5px] leading-[1.45] text-danger"><ShieldAlert size={12} className="mt-0.5 shrink-0" />{message.error}</div>
         ) : (
           <>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-soft px-2 py-1 text-[9px] font-semibold text-amber"><Sparkles size={11} /> Pia · AI assistant</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-soft px-1.5 py-0.5 text-[9px] font-semibold text-amber"><Sparkles size={11} /> Pia · AI assistant</span>
               {reply?.retrievalUsed ? <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-moss"><BookOpen size={10} /> Using PackSure knowledge</span> : null}
             </div>
-            <p className="mt-2.5 whitespace-pre-wrap text-[11.5px] leading-[1.65] text-ink">{message.content}</p>
+            <p className="mt-2 whitespace-pre-wrap text-[11px] leading-[1.6] text-ink">{message.content}</p>
             {reply?.pending ? <ConfirmationCard message={message} busy={busy} onResolve={onResolve} /> : null}
             {reply && reply.navigations.length > 0 ? (
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {reply.navigations.map((item) => (
-                  <span key={item.href} className="inline-flex items-center gap-1 rounded-full border border-moss/25 bg-leaf px-2 py-1 text-[9px] font-semibold text-moss"><ArrowRight size={10} /> {item.label}</span>
+                  <span key={item.href} className="inline-flex items-center gap-1 rounded-full border border-moss/25 bg-leaf px-1.5 py-0.5 text-[9px] font-semibold text-moss"><ArrowRight size={10} /> {item.label}</span>
                 ))}
               </div>
             ) : null}
             {reply && reply.citations.length > 0 ? (
-              <div className="mt-3 border-t border-line pt-2.5">
+              <div className="mt-2.5 border-t border-line pt-2">
                 <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-muted">Knowledge sources</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {reply.citations.map((citation) => (
-                    <span key={citation.id} className="rounded-full border border-line bg-paper px-2 py-1 text-[9px] font-semibold text-muted" title={`${citation.category} · retrieved via ${citation.via} search`}>{citation.title}</span>
+                    <span key={citation.id} className="rounded-full border border-line bg-paper px-1.5 py-0.5 text-[9px] font-semibold text-muted" title={`${citation.category} · retrieved via ${citation.via} search`}>{citation.title}</span>
                   ))}
                 </div>
               </div>
             ) : null}
-            <p className="mt-2.5 border-t border-line pt-2 text-[9px] leading-4 text-muted">Advisory only. Pia never changes compliance results, review decisions, final decisions, or audit entries.</p>
+            <p className="mt-2 border-t border-line pt-1.5 text-[9px] leading-4 text-muted">Advisory only. Pia never changes compliance results, review decisions, final decisions, or audit entries.</p>
           </>
         )}
       </div>
@@ -245,47 +245,47 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
   return (
     <div className="fixed bottom-5 right-5 z-40 sm:bottom-7 sm:right-7">
       {open ? (
-        <section className="mb-3 flex w-[min(420px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_18px_50px_rgba(32,37,33,0.2)]">
-          <header className="flex items-start justify-between gap-3 bg-[#244936] p-4 text-white">
-            <div className="flex min-w-0 items-start gap-3">
-              <RobotAvatar state={state} size={38} />
+        <section className="mb-3 flex w-[min(315px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_18px_50px_rgba(32,37,33,0.2)]">
+          <header className="flex items-start justify-between gap-3 bg-[#244936] p-3 text-white">
+            <div className="flex min-w-0 items-start gap-2.5">
+              <RobotAvatar state={state} size={28} />
               <div className="min-w-0">
-                <p className="text-sm font-semibold">Pia</p>
-                <p className="mt-1 truncate text-[10px] text-white/65">PackSure assistant · {contextLabel(context)}</p>
+                <p className="text-xs font-semibold">Pia</p>
+                <p className="mt-0.5 truncate text-[9px] text-white/65">PackSure assistant · {contextLabel(context)}</p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {messages.length > 0 ? (
-                <button type="button" onClick={clearConversation} className="focus-ring rounded-lg p-1.5 text-white/65 transition hover:bg-white/10 hover:text-white" aria-label="Clear conversation" title="Clear conversation"><Eraser size={15} /></button>
+                <button type="button" onClick={clearConversation} className="focus-ring rounded-lg p-1 text-white/65 transition hover:bg-white/10 hover:text-white" aria-label="Clear conversation" title="Clear conversation"><Eraser size={13} /></button>
               ) : null}
-              <button type="button" onClick={() => setOpen(false)} className="focus-ring rounded-lg p-1.5 text-white/65 transition hover:bg-white/10 hover:text-white" aria-label="Minimize Pia"><Minimize2 size={15} /></button>
+              <button type="button" onClick={() => setOpen(false)} className="focus-ring rounded-lg p-1 text-white/65 transition hover:bg-white/10 hover:text-white" aria-label="Minimize Pia"><Minimize2 size={13} /></button>
             </div>
           </header>
 
-          <div ref={scrollRef} className="max-h-[min(560px,62vh)] min-h-[240px] space-y-4 overflow-y-auto p-4">
+          <div ref={scrollRef} className="max-h-[min(420px,46vh)] min-h-[180px] space-y-3 overflow-y-auto p-3">
             {messages.map((message) => message.role === 'user'
-              ? <div key={message.id} className="flex justify-end"><div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#dfeee4] px-3 py-2.5 text-[11.5px] leading-5 font-medium text-[#1b3d2e]">{message.content}</div></div>
+              ? <div key={message.id} className="flex justify-end"><div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-[#dfeee4] px-2.5 py-2 text-[11px] leading-[1.45] font-medium text-[#1b3d2e]">{message.content}</div></div>
               : <AssistantBubble key={message.id} message={message} busy={loading} onResolve={resolveConfirmation} />)}
 
             {messages.length <= 1 && !loading ? (
               <div className="flex flex-wrap gap-2">
                 {suggestions.map((item) => (
-                  <button key={item} type="button" onClick={() => void ask(item)} className="focus-ring rounded-full border border-line bg-paper px-2.5 py-1.5 text-left text-[10px] font-semibold text-moss transition hover:border-moss/30 hover:bg-leaf">{item}</button>
+                  <button key={item} type="button" onClick={() => void ask(item)} className="focus-ring rounded-full border border-line bg-paper px-2 py-1 text-left text-[9.5px] font-semibold text-moss transition hover:border-moss/30 hover:bg-leaf">{item}</button>
                 ))}
               </div>
             ) : null}
 
             {loading ? (
               <div className="flex items-start gap-2">
-                <span className="mt-0.5 shrink-0"><RobotAvatar state="thinking" size={26} label="Pia is thinking" /></span>
-                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-line bg-canvas px-3 py-2.5 text-[11px] text-muted">
+                <span className="mt-0.5 shrink-0"><RobotAvatar state="thinking" size={20} label="Pia is thinking" /></span>
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-line bg-canvas px-2.5 py-2 text-[10.5px] text-muted">
                   <ThinkingDots /> Pia is thinking…
                 </div>
               </div>
             ) : null}
           </div>
 
-          <form onSubmit={(event) => { event.preventDefault(); void ask() }} className="border-t border-line bg-[#fbfaf7] p-3">
+          <form onSubmit={(event) => { event.preventDefault(); void ask() }} className="border-t border-line bg-[#fbfaf7] p-2.5">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
@@ -300,11 +300,11 @@ export function ComplianceAssistant({ baseContext }: { baseContext: AssistantCon
                 rows={2}
                 placeholder="Message Pia…"
                 aria-label="Message Pia"
-                className="focus-ring min-h-[58px] min-w-0 flex-1 resize-none rounded-xl border border-line bg-paper px-3 py-2.5 text-xs text-ink outline-none placeholder:text-[#aaa79e] focus:border-moss"
+                className="focus-ring min-h-[44px] min-w-0 flex-1 resize-none rounded-xl border border-line bg-paper px-2.5 py-2 text-[11px] text-ink outline-none placeholder:text-[#aaa79e] focus:border-moss"
               />
-              <button type="submit" disabled={loading || !question.trim()} className="focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-moss text-white transition hover:bg-[#174a37] disabled:cursor-not-allowed disabled:opacity-50" aria-label="Send message"><Send size={15} /></button>
+              <button type="submit" disabled={loading || !question.trim()} className="focus-ring grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-moss text-white transition hover:bg-[#174a37] disabled:cursor-not-allowed disabled:opacity-50" aria-label="Send message"><Send size={13} /></button>
             </div>
-            <p className="mt-2 text-[9px] leading-4 text-muted">Enter to send · Shift + Enter for a new line. Pia&apos;s answers are advisory and never change a review or final decision.</p>
+            <p className="mt-1.5 text-[9px] leading-4 text-muted">Enter to send · Shift + Enter for a new line. Pia&apos;s answers are advisory and never change a review or final decision.</p>
           </form>
         </section>
       ) : null}
