@@ -157,51 +157,33 @@ No `Math.random()`, seeded analytics, fake charts, or placeholder business stati
 
 ### Compliance AI assistant
 
-A floating robot assistant is available on every authenticated page, and the header has an **Ask Compliance AI** shortcut. It is a real multi-turn conversation rather than a keyword lookup: previous turns are replayed to the model on each request, so follow-ups such as "and who can publish that?" or "show me the evidence" work the way they do in any mainstream chat app. Enter sends, Shift + Enter adds a new line, and the conversation can be cleared at any time.
+A floating robot assistant sits in the bottom-right corner of every authenticated page, with an **Ask Compliance AI** shortcut in the header. It is a genuine conversational assistant: a small open-source language model runs **entirely on your own device** in the browser (WebGPU, with a WebAssembly fallback), so it needs no API key, no external AI service, no Ollama, and nothing to install. Conversation history is kept in the chat, so follow-up questions work naturally.
 
-It knows the whole platform: the capture workflow, every status and what produces it, roles and permissions, rule kinds and versioning, finding review and the audit log, final-decision conditions, report generation, listing and MRP comparison, dashboard risk scoring, camera and evidence handling, and the limits of the AI provider layer. That knowledge lives in `src/lib/assistant/platform-knowledge.ts` and is sent as the system prompt.
+#### How it answers
 
-It is also record-aware. On a record page it reads that record through the authorized backend tools in `src/lib/assistant/tools.ts` — inspections, findings, product history, evidence, rules, and reports — and answers questions about it:
+1. **Retrieval (RAG).** The platform knowledge base in `src/lib/assistant/knowledge.ts` — overview, roles, features, FAQs, navigation instructions, workflows, and troubleshooting — is embedded on-device with `all-MiniLM-L6-v2` (q8, ~23 MB) and searched by cosine similarity for every question. The matched documents are quoted into the prompt, so answers are grounded in real documentation instead of hardcoded branches.
+2. **On-device generation.** `SmolLM2-135M-Instruct` (135M parameters, q4 ONNX, ~70 MB) renders the prompt with its own chat template and generates the reply locally. Persona, grounding rules, and the tool specification live in `src/lib/assistant/agent-protocol.ts`.
+3. **Platform tools.** The model — not keyword matching — decides when a tool is appropriate by emitting a `TOOL {...}` line. Tools in `src/lib/assistant/agent-tools.ts` map only onto things that already exist: `navigate_to` and `open_record` use the client router; `list_documents`, `list_reports`, `get_analysis`, and `get_listing_comparison` call the same authenticated GET endpoints the app uses; `start_operation` can offer `analyze`, `run_compliance`, `listing_comparison`, or `generate_report`, and the chat shows a **Confirm and run** control that posts to the existing endpoint only after explicit approval. Review decisions and final decisions are never exposed as tools.
+4. **Grounded reply.** The tool result is fed back to the model, which writes the natural-language answer. Retrieved document titles are shown as citations under each reply.
 
-- Why did this inspection fail?
-- Which rule caused this result?
-- Which finding is more serious?
-- What happened in the previous inspection?
-- Show me the evidence.
-- What does `REVIEW_REQUIRED` mean?
+Both models download once from the open Hugging Face repository on first use (about 95 MB in total: ~70 MB of q4 weights, ~23 MB of embedding weights, ~4 MB of tokenizer) and are cached in the browser, so later visits start instantly and keep working offline. The chat shows live download progress, the active execution device, and per-reply timing. If a network blocks the first download, the assistant says so plainly instead of pretending.
+
+Example questions it handles conversationally:
+
+- Hello! What can you do?
+- How does the inspection workflow work?
+- What does `REVIEW_REQUIRED` mean, and why is my score null?
 - Who can publish a final decision?
-- How is the dashboard risk score calculated?
+- Show me my inspections / take me to the reports.
+- What did the AI analysis find on this inspection?
+- Start a compliance run on this inspection (asks for confirmation first).
 
-On a page with no record open it answers general platform questions from the knowledge base.
+Guarantees:
 
-Guarantees that hold for every provider:
-
-- The provider never receives a database handle, a Mongoose model, or a connection string. Records are fetched server-side first and passed in as text.
-- Citations and evidence links are derived server-side from the authorized records by `buildReferences` in `src/lib/assistant/prompt.ts`, never emitted by the model, so a hallucinated ID or link cannot reach the UI.
-- Access is scoped exactly like the rest of the app: a user sees only records they created unless they are an admin or reviewer.
-- Every answer is labelled **AI assessment** and states its boundary. The assistant cannot change a compliance result, a human review decision, a final decision, or an audit entry.
-
-#### Choosing a model
-
-Provider selection is server-side and env-driven, in `src/lib/assistant/provider.ts`. With nothing configured, `ASSISTANT_PROVIDER=auto` finds no credentials and PackSure answers from its built-in offline responder: a curated knowledge base plus your authorized records. Those replies are labelled `offline responder` in the chat and carry a notice, so they are never mistaken for a live model.
-
-Add any one credential to `.env.local` to switch the same assistant to real conversational answers:
-
-| `ASSISTANT_PROVIDER` | Credential | Default model |
-| --- | --- | --- |
-| `openai` | `OPENAI_API_KEY` | `gpt-4o-mini` |
-| `anthropic` | `ANTHROPIC_API_KEY` | `claude-sonnet-4-5` |
-| `gemini` | `GEMINI_API_KEY` | `gemini-2.5-flash` |
-| `groq` | `GROQ_API_KEY` | `llama-3.3-70b-versatile` |
-| `openrouter` | `OPENROUTER_API_KEY` | `openai/gpt-4o-mini` |
-| `ollama` (explicit only) | none needed | `llama3.2` |
-| `mock` | none | built-in offline responder |
-
-`auto` picks the first provider above that has a credential. `ollama` is never auto-selected because a local model server needs no key, so it must be requested by name. `ASSISTANT_MODEL` overrides the default model for whichever provider is active, and every provider also accepts a `*_BASE_URL` override.
-
-Any other OpenAI-compatible gateway works without code changes by setting `ASSISTANT_API_KEY` together with `ASSISTANT_BASE_URL`; that pair takes precedence over the named presets. The provider calls `POST {base}/chat/completions` and automatically retries with `max_completion_tokens` when an endpoint rejects the legacy `max_tokens` field.
-
-If the configured model is unreachable, rate-limited, or rejects the key, the request does not fail: PackSure answers from the offline responder and states exactly why the model was not used. Model calls happen only inside the API route, so no key ever reaches the browser.
+- No question, record, or answer ever leaves the application except the normal authenticated API calls the app itself makes.
+- The assistant is advisory: it never changes a compliance result, a human review decision, a final decision, or an audit entry, and every reply says so.
+- If the documentation does not cover a capability, the assistant states that PackSure does not implement it rather than inventing a feature.
+- Record access goes through the existing session-scoped endpoints, so a user only ever sees records their role allows.
 
 ## Important routes
 
@@ -287,15 +269,8 @@ AI_PROVIDER=mock
 NODE_ENV=development
 ```
 
-The Compliance AI assistant needs no configuration to work — it falls back to the built-in offline
-responder. To give it real conversational answers, add one provider credential, for example:
-
-```env
-ASSISTANT_PROVIDER=auto
-OPENAI_API_KEY=sk-your-key
-```
-
-See `.env.example` for every supported provider, model override, and base-URL override.
+The Compliance AI assistant needs no environment variables at all: its models run on-device and are
+fetched once from the open Hugging Face repository on first use.
 
 Generate a local secret on macOS/Linux with:
 
@@ -429,9 +404,9 @@ Leaving the capture step intentionally releases the device, and the panel return
 
 This is expected with `AI_PROVIDER=mock`. The mock provider processes real image bytes but does not invent OCR or business values.
 
-### Compliance AI answers from the "offline responder"
+### The assistant cannot download its on-device model
 
-No model credential is configured, or the configured model failed. The reply is still real — it comes from the curated platform knowledge base and your authorized records — and the chat shows a notice naming the cause. Add a credential from the table in [Choosing a model](#choosing-a-model) and restart the dev server, because environment changes are only read at startup.
+On first use the assistant downloads its two small open-source models from the open Hugging Face repository and caches them in the browser. A corporate proxy or a fully offline machine can block that first download; the assistant then says so plainly in the chat. Connect once from a network that can reach `huggingface.co` and the cached models keep working offline afterwards.
 
 ### Compliance is `NOT_APPLICABLE`
 

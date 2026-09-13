@@ -19,7 +19,7 @@ import {
 import { Brand } from '@/components/brand'
 import { ComplianceAssistant } from '@/components/compliance-assistant'
 import { canAccess, type SessionPayload, type UserRole } from '@/lib/auth-shared'
-import type { AssistantContext } from '@/lib/assistant/types'
+import type { AssistantContext } from '@/lib/assistant/context'
 
 const navigation: { label: string; href: string; icon: typeof LayoutDashboard; roles?: UserRole[] }[] = [
   { label: 'Dashboard', href: '/app', icon: LayoutDashboard },
