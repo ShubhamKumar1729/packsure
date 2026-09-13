@@ -5,7 +5,7 @@ import { useId } from 'react'
 export type RobotState = 'idle' | 'thinking' | 'speaking' | 'offline'
 
 /**
- * The Compliance AI robot. Pure inline SVG plus the CSS keyframes in globals.css, so the assistant
+ * The Pia robot avatar. Pure inline SVG plus the CSS keyframes in globals.css, so the assistant
  * adds no dependency and fetches no image assets.
  */
 export function RobotAvatar({ state = 'idle', size = 40, label = 'PackSure assistant' }: { state?: RobotState; size?: number; label?: string }) {

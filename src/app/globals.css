@@ -21,7 +21,7 @@ button, input { font: inherit; }
 button { cursor: pointer; }
 ::selection { background: #dfeee4; color: #163e2f; }
 
-/* Compliance AI robot. Kept in CSS rather than a library so the assistant ships with no extra
+/* Pia robot avatar. Kept in CSS rather than a library so the assistant ships with no extra
    dependency and no network-fetched assets. */
 @keyframes ps-bob {
   0%, 100% { transform: translateY(0); }
