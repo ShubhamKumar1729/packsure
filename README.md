@@ -25,6 +25,10 @@ The application intentionally does **not** seed products, inspections, users, re
 - Rear-camera preference for mobile devices.
 - Permission, unavailable-camera, unsupported-browser, and camera-error states have upload fallback.
 - Camera captures become JPEG `File` objects and use the same structure as uploaded images.
+- The device is released whenever the capture step is left, and the preview never reports a live camera that is not actually attached.
+- Returning to the capture step resumes the camera without prompting for permission a second time.
+- A live preview can be turned off manually, and a stream that dies mid-session is surfaced as a recoverable error.
+- Navigating away while the permission prompt is open cannot leave an orphaned stream running.
 - Up to 10 package images, with `front`, `back`, `side`, `top`, and `bottom` labels.
 - Images can be relabeled, reordered, removed, retaken, and reviewed before saving.
 - Save creates real MongoDB documents:
@@ -384,10 +388,15 @@ The database is reachable but has no records in the current user’s access scop
 
 ### Camera is unavailable
 
-- Use `http://localhost:3000`, which browsers treat as a secure development origin.
+- Use `http://localhost:3000`, which browsers treat as a secure development origin. Camera access requires a secure context, so a plain-HTTP host other than localhost will not expose `navigator.mediaDevices`.
 - Allow camera permission.
 - Check that a camera is available.
+- When the app is embedded in an iframe, the embedding page must permit the camera through its Permissions Policy. If capture is blocked inside a preview frame, open the app in its own browser tab.
 - Use the upload fallback when working in a browser or preview without camera hardware.
+
+### Camera preview goes blank after moving between steps
+
+Leaving the capture step intentionally releases the device, and the panel returns to the "Camera is off" state with the enable control visible. Returning to the capture step resumes the camera automatically. If a preview ever appears live but produces no capture, selecting **Capture photo** now reports that the preview is not live and resets the panel instead of failing silently.
 
 ### AI returns no fields
 
