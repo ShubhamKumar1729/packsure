@@ -36,7 +36,12 @@ Then: **read every draft** and fix OCR mistakes in the annotation `text` field.
 Unread drafts are not training data.
 
 ### 3. Annotate (guidelines: `ml/ANNOTATION_GUIDELINES.md`)
-For each draft create/complete the annotation JSON (char-span entities), e.g.
+Notebook 01 pre-fills every skeleton with SUGGESTED spans (the pattern extractor
+proposes MRP / net quantity / dates / batch / contacts / party names) — you
+verify, correct, delete and add, instead of drawing from scratch. Every
+suggestion stays `"reviewed": false` until YOU verified that file.
+
+For each draft complete the annotation JSON (char-span entities), e.g.
 
 ```json
 {
