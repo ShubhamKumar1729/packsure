@@ -32,7 +32,8 @@ const BAND_STYLES: Record<'high' | 'medium' | 'low', string> = {
   low: 'bg-danger-soft text-danger',
 }
 
-function metadataValue(analysis: InspectionAnalysisResult, key: string): string | number | boolean | undefined {
+function metadataValue(analysis: InspectionAnalysisResult | null, key: string): string | number | boolean | undefined {
+  if (!analysis) return undefined
   for (const image of analysis.images) {
     const metadata = image.providerMetadata as Record<string, string | number | boolean> | undefined
     const value = metadata?.[key]
@@ -84,11 +85,11 @@ export function AnalysisViewer({ inspectionId, initialAnalysis = null, canAnalyz
   const hasResults = Boolean(analysis && analysis.status === 'completed')
   const isMock = analysis?.provider === 'mock'
   const isUnavailable = analysis?.status === 'unavailable'
-  const extractor = String(metadataValue(analysis as InspectionAnalysisResult, 'extractor') ?? '')
-  const degraded = extractor === 'pattern_rules' || metadataValue(analysis as InspectionAnalysisResult, 'degraded') === true || isMock
-  const degradedDetail = String(metadataValue(analysis as InspectionAnalysisResult, 'degradedDetail') ?? '')
-  const nlpVersion = String(metadataValue(analysis as InspectionAnalysisResult, 'nlpModelVersion') ?? '')
-  const baseModel = String(metadataValue(analysis as InspectionAnalysisResult, 'nlpBaseModel') ?? '')
+  const extractor = String(metadataValue(analysis, 'extractor') ?? '')
+  const degraded = extractor === 'pattern_rules' || metadataValue(analysis, 'degraded') === true || isMock
+  const degradedDetail = String(metadataValue(analysis, 'degradedDetail') ?? '')
+  const nlpVersion = String(metadataValue(analysis, 'nlpModelVersion') ?? '')
+  const baseModel = String(metadataValue(analysis, 'nlpBaseModel') ?? '')
 
   // Evidence regions per image: detected fields (tone by confidence band).
   const regionsByImage = useMemo(() => {
