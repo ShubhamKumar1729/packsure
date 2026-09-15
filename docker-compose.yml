@@ -1,0 +1,58 @@
+# PackSure local development stack: MongoDB + NLP service + web app.
+# Usage:
+#   docker compose up --build
+# The web app runs the Next dev server; Mongo data persists in the packsure-mongo volume.
+# Set GROQ_API_KEY / AUTH_SECRET via a .env.local file or your shell — never commit them.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - packsure-mongo:/data/db
+
+  nlp:
+    build: ./nlp-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Point at the packaged (untrained) placeholder by default; mount a trained
+      # artifact over /app/model/legal_metrology_ner when you have one:
+      #   - ./nlp-service/model/legal_metrology_ner:/app/model/legal_metrology_ner:ro
+      MODEL_VERSION: ${MODEL_VERSION:-0.0.0-untrained}
+      NLP_API_KEY: ${NLP_API_KEY:-}
+      NLP_OCR_LANG: ${NLP_OCR_LANG:-eng}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request;urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  web:
+    image: node:22-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/packsure
+      AUTH_SECRET: ${AUTH_SECRET:-replace-with-a-long-random-secret}
+      AI_PROVIDER: nlp
+      NLP_SERVICE_URL: http://nlp:8000
+      NLP_API_KEY: ${NLP_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      NODE_ENV: development
+    volumes:
+      - .:/app
+      - packsure-node-modules:/app/node_modules
+    depends_on:
+      - mongo
+      - nlp
+
+volumes:
+  packsure-mongo:
+  packsure-node-modules:

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { Types } from 'mongoose'
 import { analyzeInspectionImages } from '@/lib/ai/inspection-analysis'
 import { getAIProvider } from '@/lib/ai/provider'
+import { NlpServiceError } from '@/lib/ai/nlp-provider'
 import { serializeInspectionAnalysis } from '@/lib/ai/serialize'
 import { connectToDatabase } from '@/lib/db'
 import { getCurrentSession } from '@/lib/server-auth'
@@ -94,11 +95,15 @@ export async function POST(_request: Request, { params }: { params: Promise<{ in
       return NextResponse.json({ analysis: serializeInspectionAnalysis(completed) }, { status: 201 })
     } catch (analysisError) {
       console.error('Inspection analysis error', analysisError)
+      // Distinguish "service/model unavailable" from a processing failure so
+      // the UI can tell the user exactly what happened (Phase 23).
+      const unavailable = analysisError instanceof NlpServiceError && analysisError.kind === 'unreachable'
+      const reason = analysisError instanceof NlpServiceError ? analysisError.message : 'The provider could not complete this analysis.'
       await InspectionAnalysis.findByIdAndUpdate(pendingAnalysis._id, {
-        status: 'failed',
-        error: 'The provider could not complete this analysis.',
+        status: unavailable ? 'unavailable' : 'failed',
+        error: reason.slice(0, 2000),
       })
-      return errorResponse('The analysis could not be completed.', 503)
+      return errorResponse(reason, 503)
     }
   } catch (error) {
     console.error('Analyze inspection error', error)

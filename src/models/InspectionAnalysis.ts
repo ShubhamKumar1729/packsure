@@ -21,7 +21,7 @@ const InspectionAnalysisSchema = new Schema<InspectionAnalysisDocument>(
   {
     inspectionId: { type: Schema.Types.ObjectId, ref: 'Inspection', required: true, index: true },
     createdBy: { type: Schema.Types.ObjectId, required: true, index: true },
-    status: { type: String, enum: ['running', 'completed', 'failed'], required: true, index: true },
+    status: { type: String, enum: ['running', 'completed', 'failed', 'unavailable'], required: true, index: true },
     provider: { type: String, required: true, trim: true },
     providerVersion: { type: String, required: true, trim: true },
     overallConfidence: { type: Number, min: 0, max: 1, default: 0 },

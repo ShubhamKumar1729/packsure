@@ -6,10 +6,16 @@ import type { KnowledgeDoc } from './types'
 
 export const FEATURE_DOCS: KnowledgeDoc[] = [
   {
+    id: 'feature-ai-analysis-pipeline',
+    title: 'AI analysis pipeline (OCR, NER, evidence)',
+    category: 'feature',
+    text: 'Analysis runs server-side through the Python NLP service: image preprocessing, Tesseract OCR with per-word bounding boxes and confidence, legal-metrology named-entity recognition over the OCR text, deterministic normalization (500G becomes 500 g, Rs.120/- becomes the rupee-120 form, dates become year-month), and computer-vision observations such as barcode decoding and pixel character-height estimation. Every extracted field keeps its raw OCR value, a confidence score banded high or medium or low, and a bounding box that the inspection page overlays on the stored image as evidence. When the trained model artifact is absent the service uses a transparent keyword pattern extractor and every response is flagged degraded, which the analysis viewer discloses. Missing fields are never invented; an unreachable service is reported as unavailable instead of producing fake results.',
+  },
+  {
     id: 'feature-rules-admin',
     title: 'Rules administration',
     category: 'feature',
-    text: 'Administrators configure the compliance rules on the Rules page. A rule stores a key, name, description, check area, jurisdiction, a verified legal reference, an expected requirement, a severity, a version, an enabled flag, and a machine-readable definition. The six rule kinds are field_presence, declaration_presence, field_numeric, measurement_threshold, field_pattern, and manual_review. Check areas cover MRP, net quantity, manufacturer or packer or importer, customer care details, required declarations, readability and font size, unit sale price, and declaration validation. Rules are created disabled and the database starts empty: the platform ships no legal thresholds and invents none. Key plus version is unique; publishing a new version creates it disabled and links it to the rule it supersedes.',
+    text: 'Administrators configure the compliance rules on the Rules page. A rule stores a key, name, description, check area, jurisdiction, a verified legal reference, an expected requirement, an optional remediation hint, a severity, a version, an enabled flag, and a machine-readable definition. The seven rule kinds are field_presence, any_field_presence (passes when any of several fields exists), declaration_presence, field_numeric, measurement_threshold, field_pattern, and manual_review. Check areas cover MRP, net quantity, manufacturer or packer or importer, customer care details, required declarations, readability and font size, unit sale price, and declaration validation. Rules are created disabled and the database starts empty: the platform ships no legal thresholds and invents none. The Rules page can also install the built-in Legal Metrology (Packaged Commodities) Rules 2011 baseline ruleset, which installs disabled unless the admin acknowledges having verified the references. Key plus version is unique; publishing a new version creates it disabled and links it to the rule it supersedes.',
   },
   {
     id: 'feature-products',

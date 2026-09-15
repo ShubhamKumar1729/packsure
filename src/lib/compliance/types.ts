@@ -3,7 +3,7 @@ import type { ExtractedFieldKey, InspectionAnalysisResult, SourceImageReference 
 export const COMPLIANCE_STATUSES = ['PASS', 'VIOLATION', 'REVIEW_REQUIRED', 'NOT_APPLICABLE'] as const
 export type ComplianceStatus = (typeof COMPLIANCE_STATUSES)[number]
 
-export const RULE_KINDS = ['field_presence', 'declaration_presence', 'field_numeric', 'measurement_threshold', 'field_pattern', 'manual_review'] as const
+export const RULE_KINDS = ['field_presence', 'declaration_presence', 'field_numeric', 'measurement_threshold', 'field_pattern', 'any_field_presence', 'manual_review'] as const
 export type RuleKind = (typeof RULE_KINDS)[number]
 
 export const RULE_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const
@@ -32,6 +32,8 @@ export type RuleDefinition = {
   kind: RuleKind
   checkArea: RuleCheckArea
   fieldKey?: ExtractedFieldKey
+  /** Used by `any_field_presence`: the check passes when ANY listed field exists. */
+  fieldKeys?: ExtractedFieldKey[]
   declarationType?: string
   measurementType?: string
   unit?: string
@@ -62,9 +64,24 @@ export type ComplianceResult = {
   message: string
   detectedValue?: string
   expectedRequirement: string
+  /** Suggested remediation shown to inspectors alongside the violation. */
+  remediation?: string
   confidence: number
   evidence: ComplianceEvidence[]
   evaluatedAt: string
+}
+
+/** Deterministic severity-weighted summary of a compliance run (Phase 11).
+ * Computed by legal-metrology/scoring.ts; type lives here so API contracts
+ * can reference it without cycles. */
+export type LegalSummary = {
+  formulaVersion: string
+  classification: 'COMPLIANT' | 'PARTIAL' | 'NON_COMPLIANT' | 'INSUFFICIENT_DATA'
+  score: number | null
+  counts: { pass: number; violation: number; reviewRequired: number; notApplicable: number }
+  weightsApplied: Record<RuleSeverity, number>
+  /** Plain-language formula description rendered in the UI and reports. */
+  formulaDescription: string
 }
 
 export type ComplianceRunResult = {
@@ -73,6 +90,8 @@ export type ComplianceRunResult = {
   analysisId: string
   status: ComplianceStatus
   score: number | null
+  /** Deterministic severity-weighted summary (see legal-metrology/scoring.ts). */
+  summary?: LegalSummary
   evaluatedAt: string
   results: ComplianceResult[]
 }
@@ -86,6 +105,7 @@ export type RuleEvaluationInput = {
     reference: string
     severity: RuleSeverity
     expectedRequirement: string
+    remediation?: string
     definition: RuleDefinition
   }
   analysis: InspectionAnalysisResult

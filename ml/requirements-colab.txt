@@ -1,0 +1,15 @@
+# Colab training dependencies (install INSIDE Colab, not locally).
+# Notebook cells already run these installs; this file documents them.
+
+# OCR (notebook 01) — also needs the system package: apt-get install tesseract-ocr
+pytesseract>=0.3.10
+pillow>=10.2
+
+# Training + evaluation (notebooks 03, 04)
+torch>=2.2
+transformers>=4.48      # ModernBERT requires >= 4.48
+datasets>=2.19
+accelerate>=0.33
+seqeval>=0.0.12
+sentencepiece>=0.2.0    # DeBERTa-v3 tokenizer benchmarking
+protobuf>=4.25

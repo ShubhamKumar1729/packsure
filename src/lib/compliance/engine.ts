@@ -20,6 +20,7 @@ function evidenceFromDeclaration(declaration: { sourceImage: ComplianceEvidence[
 }
 
 function missingStatus(definition: RuleDefinition, kind: 'field' | 'declaration' | 'measurement'): ComplianceStatus {
+  if (definition.notApplicableWhenMissing) return 'NOT_APPLICABLE'
   if (kind === 'measurement' && definition.notApplicableWhenMissing !== false) return 'NOT_APPLICABLE'
   return definition.missingOutcome || 'REVIEW_REQUIRED'
 }
@@ -64,6 +65,20 @@ function evaluateDefinition(analysis: InspectionAnalysisResult, definition: Rule
     const confidenceResult = confidenceStatus(confidence, definition)
     if (confidenceResult) return { status: confidenceResult, message: 'A field was detected, but confidence is below the configured threshold.', evidence, detectedValue: fields.map((field) => field.value).join(' | '), confidence }
     return { status: 'PASS', message: 'The configured field was detected.', evidence, detectedValue: fields.map((field) => field.value).join(' | '), confidence }
+  }
+
+  if (definition.kind === 'any_field_presence') {
+    // Passes when ANY of the configured fields exists (e.g. any of
+    // manufacturer/packer/importer satisfies the responsible-party declaration).
+    const keys = definition.fieldKeys ?? (definition.fieldKey ? [definition.fieldKey] : [])
+    if (keys.length === 0) return { status: 'REVIEW_REQUIRED', message: 'This rule lists no fields to check.', ...noEvidence }
+    const fields = analysis.fields.filter((field) => keys.includes(field.key))
+    if (fields.length === 0) return { status: missingStatus(definition, 'field'), message: 'None of the configured fields were detected.', ...noEvidence }
+    const confidence = Math.max(...fields.map((field) => field.confidence))
+    const evidence = fields.map(evidenceFromField)
+    const confidenceResult = confidenceStatus(confidence, definition)
+    if (confidenceResult) return { status: confidenceResult, message: 'A configured field was detected, but confidence is below the configured threshold.', evidence, detectedValue: fields.map((field) => field.value).join(' | '), confidence }
+    return { status: 'PASS', message: 'At least one of the configured fields was detected.', evidence, detectedValue: fields.map((field) => field.value).join(' | '), confidence }
   }
 
   if (definition.kind === 'declaration_presence') {
@@ -134,6 +149,7 @@ export function evaluateRule(input: RuleEvaluationInput): ComplianceResult {
     message: evaluated.message,
     detectedValue: evaluated.detectedValue,
     expectedRequirement: input.rule.expectedRequirement,
+    remediation: input.rule.remediation,
     confidence: evaluated.confidence,
     evidence: evaluated.evidence,
     evaluatedAt: new Date().toISOString(),

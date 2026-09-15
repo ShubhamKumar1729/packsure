@@ -1,9 +1,15 @@
-export type AIAnalysisStatus = 'running' | 'completed' | 'failed'
-export type OCRStatus = 'completed' | 'not_configured' | 'failed'
+export type AIAnalysisStatus = 'running' | 'completed' | 'failed' | 'unavailable'
+export type OCRStatus = 'completed' | 'not_configured' | 'failed' | 'empty'
 
 export type ImageLabel = 'front' | 'back' | 'side' | 'top' | 'bottom'
 export type ImageSource = 'camera' | 'upload'
 
+/**
+ * Field keys accepted in analysis records. The first group is the original
+ * schema (kept for backward compatibility with stored records and custom
+ * rules); the second group mirrors the legal-metrology NER entity schema
+ * (see field-keys.ts for the centralized config).
+ */
 export type ExtractedFieldKey =
   | 'mrp'
   | 'net_quantity'
@@ -11,6 +17,20 @@ export type ExtractedFieldKey =
   | 'customer_care_contact'
   | 'product_brand'
   | 'unit_sale_price'
+  | 'product_name'
+  | 'manufacturer'
+  | 'packer'
+  | 'importer'
+  | 'mfg_date'
+  | 'pkd_date'
+  | 'import_date'
+  | 'expiry_date'
+  | 'best_before'
+  | 'batch_number'
+  | 'customer_care'
+  | 'address'
+  | 'country_of_origin'
+  | 'ingredients'
   | 'other'
 
 export type BoundingBox = {

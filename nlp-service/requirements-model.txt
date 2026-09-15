@@ -1,0 +1,7 @@
+# Extra dependencies required to LOAD and SERVE the trained NER model.
+# Install: pip install -r requirements.txt -r requirements-model.txt
+# (For training in Google Colab, use ml/requirements-colab.txt instead.)
+
+torch>=2.2
+transformers>=4.48   # ModernBERT support requires >= 4.48
+accelerate>=0.33

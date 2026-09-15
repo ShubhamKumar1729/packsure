@@ -52,6 +52,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ in
         reference: rule.reference,
         severity: rule.severity,
         expectedRequirement: rule.expectedRequirement,
+        remediation: rule.remediation,
         definition: rule.definition,
       })),
       analysisResult,

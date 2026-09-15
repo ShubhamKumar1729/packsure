@@ -41,14 +41,14 @@ The application intentionally does **not** seed products, inspections, users, re
 ### AI analysis
 
 - Server-side provider abstraction in `src/lib/ai/types.ts`.
-- Current `MockAIProvider` accepts real stored image bytes but intentionally returns no inferred OCR, fields, declarations, or business values.
-- It cannot invent MRP, quantity, manufacturer, or contact information.
-- A real model can replace it by implementing the `AIProvider` interface and registering it in `src/lib/ai/provider.ts`.
-- The browser never calls an AI provider directly.
+- `NlpPipelineProvider` (`AI_PROVIDER=nlp`) is the REAL pipeline: it sends stored image bytes to the Python NLP service, which runs preprocessing → Tesseract OCR (word boxes + confidence) → legal-metrology NER → deterministic normalization → CV observations, and returns structured fields with `value`, raw OCR span, confidence, and bounding boxes.
+- Until a trained model artifact is placed in `nlp-service/model/legal_metrology_ner/`, the service runs the transparent keyword/pattern extractor and marks every response `degraded` — the UI discloses this. Missing fields stay missing; nothing is invented.
+- `MockAIProvider` remains an explicit opt-in test seam (`AI_PROVIDER=mock`): it processes real image bytes but intentionally returns no inferred values.
+- The browser never calls an AI provider directly. Service unreachability is stored as analysis status `unavailable` with a specific message instead of fake results.
 
 AI flow:
 
-`Stored images → Provider → OCR/fields/declarations/measurements → Stored InspectionAnalysis`
+`Stored images → Provider (NLP service: OCR → NER → normalization → CV) → Stored InspectionAnalysis → deterministic rule engine`
 
 ### Compliance rules
 
@@ -59,10 +59,11 @@ AI flow:
   - `VIOLATION`
   - `REVIEW_REQUIRED`
   - `NOT_APPLICABLE`
-- Supported configurable rule kinds include field presence, declaration presence, numeric checks, measurements, patterns, and manual review.
-- Rules store verified references, jurisdiction, severity, version, definition, and enabled state.
+- Supported configurable rule kinds include field presence, any-of-fields presence, declaration presence, numeric checks, measurements, patterns, and manual review.
+- Rules store verified references, jurisdiction, severity, remediation, version, definition, and enabled state.
 - Rules begin disabled and the database starts without legal thresholds or declarations.
-- Administrators must supply verified legal references before enabling rules.
+- Administrators must supply verified legal references before enabling rules. A built-in **Legal Metrology (Packaged Commodities) Rules, 2011 baseline ruleset** (13 rules with references, severity, and remediation) can be installed from the Rules admin page; it installs disabled unless the admin explicitly acknowledges having verified the references, and category-dependent rules always start disabled. See `docs/LEGAL_NOTES.md`.
+- Every compliance run carries a deterministic summary: a severity-weighted score (formula versioned, configurable weights) and a preliminary classification (`COMPLIANT / PARTIAL / NON_COMPLIANT`, `INSUFFICIENT_DATA` when nothing applies). The computed assessment is explicitly labeled preliminary; the human final decision stays authoritative.
 - Re-evaluating an inspection creates a new compliance run linked to the analysis used.
 
 ### Human review and final decision
@@ -300,6 +301,27 @@ If the container already exists:
 docker start packsure-mongo
 ```
 
+Or run the whole stack (Mongo + NLP service + web app) with one command:
+
+```bash
+docker compose up --build
+```
+
+### 4b. Start the NLP service (real AI analysis)
+
+The analysis pipeline (OCR → legal-metrology NER → normalization) runs in a Python FastAPI service:
+
+```bash
+cd nlp-service
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+sudo apt-get install -y tesseract-ocr   # macOS: brew install tesseract
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+curl localhost:8000/health
+```
+
+Keep `AI_PROVIDER=nlp` and `NLP_SERVICE_URL=http://localhost:8000` in `.env.local`. Without a trained model artifact the service reports `degraded` and extracts via the transparent pattern fallback; train and install your model following `docs/ML_TRAINING.md`.
+
 ### 5. Provision a real local user
 
 PackSure intentionally has no public signup route and does not create a default user. Use your approved administrator process to create a real user document in MongoDB.
@@ -400,7 +422,7 @@ Leaving the capture step intentionally releases the device, and the panel return
 
 ### AI returns no fields
 
-This is expected with `AI_PROVIDER=mock`. The mock provider processes real image bytes but does not invent OCR or business values.
+With `AI_PROVIDER=nlp`, check the NLP service is running (`curl localhost:8000/health`) and that the image is legible. Without a trained model the pattern fallback extracts MRP/net quantity/dates from clear text but intentionally leaves names/product titles empty — train the model (`docs/ML_TRAINING.md`) for full coverage. Missing fields are never fabricated. With `AI_PROVIDER=mock`, no fields are ever returned by design.
 
 ### Pia says she is not configured
 

@@ -9,6 +9,7 @@ export interface RuleDocument {
   jurisdiction: string
   reference: string
   expectedRequirement: string
+  remediation?: string
   severity: RuleSeverity
   referenceUrl?: string
   version: string
@@ -38,6 +39,7 @@ const RuleSchema = new Schema<RuleDocument>(
       kind: { type: String, enum: RULE_KINDS, required: true },
       checkArea: { type: String, enum: RULE_CHECK_AREAS, required: true },
       fieldKey: { type: String, trim: true },
+      fieldKeys: { type: [String], default: undefined },
       declarationType: { type: String, trim: true },
       measurementType: { type: String, trim: true },
       unit: { type: String, trim: true },

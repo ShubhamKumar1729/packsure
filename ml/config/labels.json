@@ -1,0 +1,158 @@
+{
+  "name": "Legal-Metrology-NER",
+  "base_model_candidates": [
+    "answerdotai/ModernBERT-base",
+    "microsoft/deberta-v3-base"
+  ],
+  "version": "0.0.0-untrained",
+  "note": "Canonical ML-side entity label config. MUST mirror nlp-service/app/entities.py (enforced by nlp-service/tests/test_entities.py).",
+  "labels": [
+    {
+      "label": "PRODUCT_NAME",
+      "field_key": "product_name",
+      "description": "Common or generic name of the commodity as declared on the label.",
+      "examples": [
+        "Biscuits",
+        "Toilet Cleaner",
+        "Instant Noodles"
+      ]
+    },
+    {
+      "label": "MANUFACTURER",
+      "field_key": "manufacturer",
+      "description": "Name of the manufacturing company (not the address).",
+      "examples": [
+        "Sunfeast",
+        "Hindustan Unilever Ltd"
+      ]
+    },
+    {
+      "label": "PACKER",
+      "field_key": "packer",
+      "description": "Name of the packer when different from the manufacturer.",
+      "examples": [
+        "Packed by: Fresh Foods Pvt Ltd"
+      ]
+    },
+    {
+      "label": "IMPORTER",
+      "field_key": "importer",
+      "description": "Name of the importer for imported goods.",
+      "examples": [
+        "Imported by: Global Traders India"
+      ]
+    },
+    {
+      "label": "NET_QUANTITY",
+      "field_key": "net_quantity",
+      "description": "Declared net quantity / weight / volume (value with or without unit).",
+      "examples": [
+        "500 g",
+        "1 kg",
+        "750 ml",
+        "Net Wt. 200G"
+      ]
+    },
+    {
+      "label": "MRP",
+      "field_key": "mrp",
+      "description": "Retail sale price declaration including its currency marker.",
+      "examples": [
+        "MRP Rs.120/-",
+        "₹ 45",
+        "Max. Retail Price Rs 99"
+      ]
+    },
+    {
+      "label": "MFG_DATE",
+      "field_key": "mfg_date",
+      "description": "Month & year of manufacture, in any surface form.",
+      "examples": [
+        "Mfd 06/2026",
+        "Manufactured: Jun 2026",
+        "MFG 09/25"
+      ]
+    },
+    {
+      "label": "PKD_DATE",
+      "field_key": "pkd_date",
+      "description": "Month & year of pre-packing.",
+      "examples": [
+        "Pkd. 07/2026",
+        "Packed on 12/2025"
+      ]
+    },
+    {
+      "label": "IMPORT_DATE",
+      "field_key": "import_date",
+      "description": "Month & year of import declaration.",
+      "examples": [
+        "Imported 03/2026"
+      ]
+    },
+    {
+      "label": "EXPIRY_DATE",
+      "field_key": "expiry_date",
+      "description": "Use-by / expiry declaration.",
+      "examples": [
+        "Use by 08/2026",
+        "Exp: 12/2026"
+      ]
+    },
+    {
+      "label": "BEST_BEFORE",
+      "field_key": "best_before",
+      "description": "Best-before declaration, including relative forms.",
+      "examples": [
+        "Best before 6 months from packaging",
+        "Best Before: 09/2026"
+      ]
+    },
+    {
+      "label": "BATCH_NUMBER",
+      "field_key": "batch_number",
+      "description": "Batch or lot identification code.",
+      "examples": [
+        "Batch No. AB1234",
+        "Lot 42B",
+        "B-9912"
+      ]
+    },
+    {
+      "label": "CUSTOMER_CARE",
+      "field_key": "customer_care",
+      "description": "Consumer-care contact: phone, email or URL labelled for complaints.",
+      "examples": [
+        "custcare@brand.in",
+        "1800-123-4567",
+        "www.brand.in/care"
+      ]
+    },
+    {
+      "label": "ADDRESS",
+      "field_key": "address",
+      "description": "Postal address block of the manufacturer / packer / importer.",
+      "examples": [
+        "Plot 12, Andheri East, Mumbai 400093"
+      ]
+    },
+    {
+      "label": "COUNTRY_OF_ORIGIN",
+      "field_key": "country_of_origin",
+      "description": "Country of origin declaration.",
+      "examples": [
+        "Made in India",
+        "Product of Thailand",
+        "Origin: China"
+      ]
+    },
+    {
+      "label": "INGREDIENTS",
+      "field_key": "ingredients",
+      "description": "Ingredients list heading plus the list itself.",
+      "examples": [
+        "Ingredients: Wheat flour, sugar, edible oil"
+      ]
+    }
+  ]
+}

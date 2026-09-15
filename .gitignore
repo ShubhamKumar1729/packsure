@@ -29,3 +29,20 @@ tsconfig.tsbuildinfo
 # Local editor settings
 .vscode/
 .idea/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# ML artifacts — never commit datasets, model binaries or runs
+ml/dataset/raw/**
+!ml/dataset/raw/.gitkeep
+ml/runs/
+*.safetensors
+*.bin
+ml/notebooks/*.ipynb_checkpoints/
+
+# E2E real sample image (user-provided, not committed)
+e2e/

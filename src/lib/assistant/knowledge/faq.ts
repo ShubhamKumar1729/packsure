@@ -15,19 +15,19 @@ export const FAQ_DOCS: KnowledgeDoc[] = [
     id: 'faq-status-meanings',
     title: 'What each status value means',
     category: 'faq',
-    text: 'Compliance status, produced only by the rule engine: PASS means the applicable rules were satisfied; VIOLATION means at least one rule was violated; REVIEW_REQUIRED means evidence was insufficient, confidence was below the configured threshold, or a rule explicitly needs a human; NOT_APPLICABLE means no enabled rule applied. Human finding decision: PENDING, ACCEPTED, REJECTED. Final decision: PENDING, COMPLIANT, VIOLATION. Inspection lifecycle: submitted, in_review, closed; publishing a final decision closes the inspection. Analysis status: running, completed, failed. Listing comparison: MATCHED, MISMATCH, REVIEW_REQUIRED.',
+    text: 'Compliance status, produced only by the rule engine: PASS means the applicable rules were satisfied; VIOLATION means at least one rule was violated; REVIEW_REQUIRED means evidence was insufficient, confidence was below the configured threshold, or a rule explicitly needs a human; NOT_APPLICABLE means no enabled rule applied. Human finding decision: PENDING, ACCEPTED, REJECTED. Final decision: PENDING, COMPLIANT, VIOLATION. Inspection lifecycle: submitted, in_review, closed; publishing a final decision closes the inspection. Analysis status: running, completed, failed, or unavailable (the NLP analysis service could not be reached — start the nlp-service and run analysis again). Listing comparison: MATCHED, MISMATCH, REVIEW_REQUIRED. Every compliance run also shows a computed preliminary classification: COMPLIANT, PARTIAL, NON_COMPLIANT, or INSUFFICIENT_DATA.',
   },
   {
     id: 'faq-why-null-score',
-    title: 'Why is my compliance score empty or null?',
+    title: 'How does the compliance score work?',
     category: 'faq',
-    text: 'The compliance score is null in two deliberate cases: when no rule was applicable at all, and when any single result is REVIEW_REQUIRED. In the second case a human still has to resolve the uncertain result, so publishing a percentage would be misleading. Once reviewers accept or reject the pending findings and compliance is re-run, the score becomes meaningful again.',
+    text: 'Two scores exist. The legacy rule-engine score stays null while any check needs human review, because publishing a percentage with unresolved findings would be misleading. The severity-weighted summary score (shown with the computed classification) is always derivable: applicable checks are weighted CRITICAL 25, HIGH 15, MEDIUM 8, LOW 3; violations subtract their full weight, pending reviews subtract 40 percent, and passes subtract nothing. When no check is applicable the score is null and the classification is INSUFFICIENT_DATA. It is a triage aid, not a legal conclusion — the human final decision is authoritative.',
   },
   {
     id: 'faq-no-fields',
     title: 'Analysis completed but extracted nothing',
     category: 'faq',
-    text: 'With AI_PROVIDER=mock this is expected, not a bug: the mock provider processes the real stored image bytes but intentionally returns no OCR text, no fields, no declarations, and no business values, because it must never invent an MRP or a net quantity. Compliance then usually reports NOT_APPLICABLE because there were no fields for the rules to test. To get real extraction an administrator implements the AIProvider interface server-side and registers it.',
+    text: 'With AI_PROVIDER=mock this is expected: the mock provider processes the real stored image bytes but intentionally returns no OCR text, no fields, and no business values, because it must never invent an MRP or a net quantity. With AI_PROVIDER=nlp the real pipeline runs: the NLP service (nlp-service/) performs OCR and legal-metrology extraction. Until a trained NER model is installed in nlp-service/model/legal_metrology_ner/, extraction runs in a disclosed degraded mode using a transparent keyword/pattern extractor (a degraded banner is shown); fields it cannot find stay missing rather than being fabricated. Train the model with the Colab notebooks in ml/ — see docs/ML_TRAINING.md. If the analysis says the service is unavailable, start the NLP service and try again.',
   },
   {
     id: 'faq-empty-database',

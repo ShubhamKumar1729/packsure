@@ -9,6 +9,7 @@ export type StoredRuleLike = {
   jurisdiction: string
   reference: string
   expectedRequirement: string
+  remediation?: string
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   referenceUrl?: string
   version: string
@@ -29,6 +30,7 @@ export function serializeRule(rule: StoredRuleLike) {
     jurisdiction: rule.jurisdiction,
     reference: rule.reference,
     expectedRequirement: rule.expectedRequirement,
+    remediation: rule.remediation || undefined,
     severity: rule.severity,
     referenceUrl: rule.referenceUrl || '',
     version: rule.version,
@@ -41,7 +43,7 @@ export function serializeRule(rule: StoredRuleLike) {
 }
 
 export function isRuleKind(value: unknown): value is RuleKind {
-  return typeof value === 'string' && ['field_presence', 'declaration_presence', 'field_numeric', 'measurement_threshold', 'field_pattern', 'manual_review'].includes(value)
+  return typeof value === 'string' && ['field_presence', 'declaration_presence', 'field_numeric', 'measurement_threshold', 'field_pattern', 'any_field_presence', 'manual_review'].includes(value)
 }
 
 export function isRuleCheckArea(value: unknown): value is RuleCheckArea {
